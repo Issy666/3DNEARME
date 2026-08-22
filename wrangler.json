@@ -1,14 +1,15 @@
 {
-  "account": {
-    "id": "ba109e4e9af8fcaf6068f270ad669472",
-    "name": "Isabelbarton33@gmail.com's Account"
-  },
-  "d1_databases": [{
-    "binding": "DB",
-    "database_name": "3dconnectme",
-    "database_id": "2a61dd72-6f66-413b-96bb-65a054cea617"
- }],
- "kv_namespaces": [
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "3dnearme",
+  "pages_build_output_dir": ".",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "3dconnectme",
+      "database_id": "2a61dd72-6f66-413b-96bb-65a054cea617"
+    }
+  ],
+  "kv_namespaces": [
     {
       "binding": "GEOCODE_CACHE",
       "id": "d015d61ce6a546df876d199ca39667fa"

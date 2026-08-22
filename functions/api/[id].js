@@ -7,7 +7,7 @@
 // when it was reached via a search — search.html passes its geocoded
 // center through as query params on the "View profile" link.
 
-import { haversineKm } from '../../_lib/geo.js';
+import { haversineKm } from '../_lib/geo.js';
 
 export async function onRequestGet({ request, env, params }) {
   const id = Number(params.id);
