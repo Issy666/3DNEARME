@@ -1,0 +1,99 @@
+/* ==========================================================================
+   LOCALPRINT — THEME
+   One file to control colour, type and shape across index.html, search.html
+   and profile.html. Change values here, not in the individual page files.
+   ========================================================================== */
+
+:root{
+
+  /* ---- Core palette --------------------------------------------------- */
+  --ink:          #14171B;  /* primary text, dark surfaces (nameplate, buttons) */
+  --paper:        #F1F3EF;  /* page background */
+  --paper-raised: #FFFFFF;  /* cards, inputs, anything "lifted" off the page */
+  --line:         #D2D6CD;  /* hairline borders, dividers, grid texture */
+  --muted:        #6B7169;  /* secondary text, captions, labels */
+
+  /* ---- Accents ---------------------------------------------------------
+     teal   = primary action colour (buttons, links, distance readouts)
+     signal = used sparingly for "live" indicators only — don't spread
+              this one around, it loses meaning if everything is orange */
+  --light-red:       #D0716D;
+  --red:  #600D07;  /* hover/active state for teal elements */
+  --signal:     #FF6A2B;
+
+  /* ---- Status colours (used on availability dots) ---------------------- */
+  --status-online:  #3FA66B;
+  --status-offline: #B7BDB2;
+
+  /* ---- Shape ------------------------------------------------------------ */
+  --radius: 2px;  /* kept small/sharp on purpose — change to 8-12px for a softer look */
+
+  /* ---- Type --------------------------------------------------------------
+     display/mono = headings, data readouts, buttons, nav
+     body          = paragraphs, descriptions
+     Swap the font-family stacks below and update the Google Fonts <link>
+     tag in each HTML file's <head> to match. */
+  --font-mono: Impact, fantasy;
+  --font-body: Arial, sans-serif;
+}
+
+/* ==========================================================================
+   ALTERNATE THEMES
+   Uncomment one block below (and comment out :root above) to preview a
+   different direction. Keep variable names identical so nothing else
+   needs to change in the HTML/CSS.
+   ========================================================================== */
+
+/* ---- Alt 1: Dark workshop (near-black base, amber accent) --------------
+:root{
+  --ink:          #F1F3EF;
+  --paper:        #16181C;
+  --paper-raised: #1F2226;
+  --line:         #33373C;
+  --muted:        #9AA098;
+  --teal:         #E8A33D;
+  --teal-deep:    #C9862A;
+  --signal:       #FF6A2B;
+  --status-online:  #4CC48A;
+  --status-offline: #5B615C;
+  --radius: 2px;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-body: 'IBM Plex Sans', sans-serif;
+}
+*/
+
+/* ---- Alt 2: Blueprint (cool blues, technical drawing feel) -------------
+:root{
+  --ink:          #10233F;
+  --paper:        #F4F7FA;
+  --paper-raised: #FFFFFF;
+  --line:         #C7D3E0;
+  --muted:        #5C7089;
+  --teal:         #2E6FE8;
+  --teal-deep:    #1F52B8;
+  --signal:       #E8542E;
+  --status-online:  #2F9E6E;
+  --status-offline: #A6B3C2;
+  --radius: 2px;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-body: 'IBM Plex Sans', sans-serif;
+}
+*/
+
+/* ---- Alt 3: Soft/rounded (friendlier, less "spec sheet") ---------------
+:root{
+  --ink:          #232323;
+  --paper:        #FAFAF8;
+  --paper-raised: #FFFFFF;
+  --line:         #E4E4E0;
+  --muted:        #7A7A73;
+  --teal:         #2FA88C;
+  --teal-deep:    #21806B;
+  --signal:       #FF7A47;
+  --status-online:  #3FA66B;
+  --status-offline: #C7C7C1;
+  --radius: 10px;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-body: 'IBM Plex Sans', sans-serif;
+}
+*/

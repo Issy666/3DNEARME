@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LocalPrint — Printer profile</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+<link rel="stylesheet" href="theme.css">
+<style>
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:var(--font-body); line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:var(--font-mono);}
+  a{color:inherit;}
+
+  header{
+    background:rgba(241,243,239,0.95);
+    border-bottom:1px solid var(--line);
+  }
+  .nav{
+    max-width:920px; margin:0 auto; padding:0 24px;
+    display:flex; align-items:center; justify-content:space-between; height:64px;
+  }
+  .wordmark{
+    font-family:var(--font-mono); font-weight:600;
+    font-size:15px; letter-spacing:0.12em; text-decoration:none;
+  }
+  .wordmark span{color:var(--light-red);}
+  .back{font-size:13.5px; color:var(--muted); text-decoration:none;}
+  .back:hover{color:var(--ink);}
+
+  .wrap{max-width:920px; margin:0 auto; padding:40px 24px 80px;}
+
+  /* Nameplate */
+  .nameplate{
+    background:var(--ink); color:var(--paper);
+    border-radius:var(--radius);
+    padding:32px 28px;
+    display:flex; justify-content:space-between; align-items:flex-end; gap:20px; flex-wrap:wrap;
+    margin-bottom:24px;
+  }
+  .nameplate .tag{
+    font-family:var(--font-mono); font-size:12px; letter-spacing:0.12em;
+    color:#8FDBD3; text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; gap:8px;
+  }
+  .nameplate .tag .dot{width:6px; height:6px; border-radius:50%; background:var(--status-online);}
+  .nameplate h1{font-size:28px; font-weight:700; letter-spacing:-0.01em;}
+  .nameplate .suburb{color:#B7BDB2; font-size:14.5px; margin-top:6px;}
+  .distance-readout{
+    font-family:var(--font-mono);
+    text-align:right;
+  }
+  .distance-readout .val{font-size:26px; font-weight:600; color:var(--light-red);}
+  .distance-readout .lbl{font-size:11px; color:#8B9088; letter-spacing:0.08em; text-transform:uppercase;}
+
+  /* Stat block (LCD readout) */
+  .stats{
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    margin-bottom:28px;
+  }
+  .stat{
+    background:var(--paper-raised);
+    padding:16px 14px;
+  }
+  .stat .lbl{
+    font-family:var(--font-mono); font-size:10.5px; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--muted); margin-bottom:6px;
+  }
+  .stat .val{font-family:var(--font-mono); font-size:15px; font-weight:600;}
+
+  section.block{margin-bottom:32px;}
+  section.block h2{
+    font-size:13px; text-transform:uppercase; letter-spacing:0.08em;
+    color:var(--muted); font-family:var(--font-mono);
+    margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--line);
+  }
+  section.block p{font-size:15px; color:#333; max-width:640px;}
+
+  .chips{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{
+    font-family:var(--font-mono); font-size:12.5px;
+    border:1px solid var(--line); background:var(--paper-raised);
+    border-radius:var(--radius); padding:6px 10px; color:var(--ink);
+  }
+
+  /* Services offered (catalogue / submit your own / custom design) */
+  .services{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:12px;
+  }
+  .service{
+    border:1px solid var(--line); border-radius:var(--radius);
+    background:var(--paper-raised); padding:16px;
+    transition:opacity .15s ease, border-color .15s ease;
+  }
+  .service[data-active="false"]{opacity:0.45;}
+  .service[data-active="true"]{border-color:var(--light-red);}
+  .service-status{
+    font-family:var(--font-mono); font-size:10.5px; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--muted);
+    display:flex; align-items:center; gap:6px; margin-bottom:10px;
+  }
+  .service-status .dot{width:6px; height:6px; border-radius:50%; background:var(--status-offline);}
+  .service[data-active="true"] .service-status .dot{background:var(--status-online);}
+  .service h3{font-size:14.5px; font-weight:600; margin-bottom:5px;}
+  .service p{font-size:12.5px; color:var(--muted); max-width:none;}
+
+  /* Catalogue grid */
+  .catalogue{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:10px;
+  }
+  .catalogue-item{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    border:1px solid var(--line); border-radius:var(--radius);
+    background:var(--paper-raised); padding:12px 14px;
+    text-decoration:none; color:var(--ink); font-size:13.5px;
+    transition:border-color .15s ease;
+  }
+  .catalogue-item:hover, .catalogue-item:focus-visible{border-color:var(--light-red);}
+  .catalogue-item .arrow{font-family:var(--font-mono); font-size:13px; color:var(--muted);}
+  .catalogue-empty{font-size:13.5px; color:var(--muted); font-style:italic;}
+
+  #miniMap{
+    height:260px; border:1px solid var(--line); border-radius:var(--radius);
+  }
+  .map-note{font-size:12.5px; color:var(--muted); margin-top:8px;}
+
+  .contact-bar{
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;
+    background:var(--paper-raised); border:1px solid var(--line); border-radius:var(--radius);
+    padding:20px 24px; margin-top:8px;
+  }
+  .contact-bar p{font-size:14px; color:var(--muted); max-width:360px;}
+  .btn-contact{
+    font-family:var(--font-mono); font-size:13.5px; font-weight:600;
+    background:var(--light-red); color:#fff; padding:12px 22px; border-radius:var(--radius);
+    text-decoration:none; white-space:nowrap;
+    transition:background .15s ease;
+  }
+  .btn-contact:hover{background:var(--red);}
+
+  @media (max-width:640px){
+    .stats{grid-template-columns:repeat(2, 1fr);}
+    .services{grid-template-columns:1fr;}
+    .nameplate{flex-direction:column; align-items:flex-start;}
+    .distance-readout{text-align:left;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a href="index.html" class="wordmark">LOCAL<span>PRINT</span></a>
+    <a href="search.html" class="back">← Back to results</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="nameplate">
+    <div>
+      <div class="tag"><span class="dot"></span> <span id="statusText">Active this week</span></div>
+      <h1 id="alias">Loading…</h1>
+      <div class="suburb" id="suburb"></div>
+    </div>
+    <div class="distance-readout">
+      <div class="val" id="distanceVal">— KM</div>
+      <div class="lbl">from your suburb</div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="lbl">Printer</div><div class="val" id="statModel">—</div></div>
+    <div class="stat"><div class="lbl">Build volume</div><div class="val" id="statVolume">—</div></div>
+    <div class="stat"><div class="lbl">Min layer height</div><div class="val" id="statLayer">—</div></div>
+    <div class="stat"><div class="lbl">Typical turnaround</div><div class="val" id="statTurnaround">—</div></div>
+  </div>
+
+  <section class="block">
+    <h2>Materials on hand</h2>
+    <div class="chips" id="materials"></div>
+  </section>
+
+  <section class="block">
+    <h2>Services offered</h2>
+    <div class="services" id="services"></div>
+  </section>
+
+  <section class="block" id="catalogueSection">
+    <h2>Catalogue</h2>
+    <div class="catalogue" id="catalogue"></div>
+  </section>
+
+  <section class="block">
+    <h2>About</h2>
+    <p id="about"></p>
+  </section>
+
+  <section class="block">
+    <h2>Approximate location</h2>
+    <div id="miniMap"></div>
+    <p class="map-note">Exact address is shared only after you message — this shows a general area, not a pin on their house.</p>
+  </section>
+
+  <div class="contact-bar">
+    <p>Reach out with your file, quantity and material — most makers reply within a day or two.</p>
+    <a class="btn-contact" id="contactBtn" href="#">Message on LocalPrint</a>
+  </div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // ---- Mock data (replace with a fetch() to your /api/printers/:id endpoint) ----
+  // services.catalogue: array of {name, url} pre-made designs ready to print
+  // services.submissions: true/false — will print a customer's own file
+  // services.customDesign: true/false — will design something from a brief
+  const PRINTERS = {
+    1: { alias:"Owen's Garage Print Co.", suburb:"West End", distanceKm:1.2, model:"Bambu Lab P1S", volume:"256×256×256mm", layer:"0.08mm", turnaround:"1–2 days", materials:["PLA","PETG","TPU"], online:true,
+         services:{
+           catalogue:[
+             { name:"Phone stand (adjustable)", url:"#" },
+             { name:"Cable clip 6-pack", url:"#" },
+             { name:"Desk cord organiser", url:"#" },
+             { name:"Articulated fidget dragon", url:"#" }
+           ],
+           submissions:true,
+           customDesign:true
+         },
+         about:"Been printing for about four years, started with props and now do a mix of functional parts, prototypes and small batch runs. Happy to look at STL files and quote before you commit.",
+         lat:-27.4820, lng:153.0100, contact:"mailto:owen@example.com?subject=LocalPrint%20enquiry" },
+    2: { alias:"M. Chen — Prototyping", suburb:"South Brisbane", distanceKm:2.4, model:"Prusa MK4", volume:"250×210×220mm", layer:"0.05mm", turnaround:"2–3 days", materials:["PLA","ABS"], online:true,
+         services:{
+           catalogue:[],
+           submissions:true,
+           customDesign:true
+         },
+         about:"Mechanical engineer, mostly print jigs, brackets and prototypes for other makers and small businesses. Good tolerances, will flag anything that looks like it won't print well.",
+         lat:-27.4770, lng:153.0190, contact:"mailto:chen@example.com?subject=LocalPrint%20enquiry" },
+    3: { alias:"The Spool Shed", suburb:"Highgate Hill", distanceKm:3.1, model:"Creality K1 Max", volume:"300×300×300mm", layer:"0.1mm", turnaround:"3–5 days", materials:["PLA","PETG"], online:false,
+         services:{
+           catalogue:[
+             { name:"Large planter (200mm)", url:"#" },
+             { name:"Storage bin set", url:"#" }
+           ],
+           submissions:true,
+           customDesign:false
+         },
+         about:"Large-format printer, good for bigger single pieces or batches of smaller ones. Currently a bit backed up so turnaround runs longer than usual.",
+         lat:-27.4880, lng:153.0140, contact:"mailto:spoolshed@example.com?subject=LocalPrint%20enquiry" },
+    4: { alias:"Resin & Rust", suburb:"Woolloongabba", distanceKm:4.6, model:"Elegoo Saturn (Resin)", volume:"192×120×200mm", layer:"0.025mm", turnaround:"2–4 days", materials:["Resin"], online:true,
+         services:{
+           catalogue:[
+             { name:"D&D miniature — 32mm scale", url:"#" }
+           ],
+           submissions:true,
+           customDesign:true
+         },
+         about:"Specialise in high-detail resin prints — miniatures, jewellery casting masters, figurines. Not set up for large or structural parts.",
+         lat:-27.4890, lng:153.0360, contact:"mailto:resinrust@example.com?subject=LocalPrint%20enquiry" },
+    5: { alias:"Milton Makerspace", suburb:"Milton", distanceKm:5.8, model:"Bambu Lab X1C", volume:"256×256×256mm", layer:"0.08mm", turnaround:"3–4 days", materials:["PLA","PETG","Nylon"], online:true,
+         services:{
+           catalogue:[],
+           submissions:true,
+           customDesign:false
+         },
+         about:"Community makerspace machine — a small material fee applies and jobs queue behind member projects, but it's a reliable option if you're not in a rush.",
+         lat:-27.4680, lng:152.9990, contact:"mailto:milton.makers@example.com?subject=LocalPrint%20enquiry" },
+  };
+
+  const params = new URLSearchParams(window.location.search);
+  const id = Number(params.get('id')) || 1;
+  const p = PRINTERS[id] || PRINTERS[1];
+
+  document.title = `${p.alias} — LocalPrint`;
+  document.getElementById('alias').textContent = p.alias;
+  document.getElementById('suburb').textContent = p.suburb;
+  document.getElementById('distanceVal').innerHTML = `&Delta; ${p.distanceKm.toFixed(1)} <span style="font-size:15px;">KM</span>`;
+  document.getElementById('statusText').textContent = p.online ? 'Active this week' : 'Inactive recently';
+  document.getElementById('statModel').textContent = p.model;
+  document.getElementById('statVolume').textContent = p.volume;
+  document.getElementById('statLayer').textContent = p.layer;
+  document.getElementById('statTurnaround').textContent = p.turnaround;
+  document.getElementById('about').textContent = p.about;
+  document.getElementById('contactBtn').href = p.contact;
+  document.getElementById('materials').innerHTML =
+    p.materials.map(m => `<span class="chip">${m}</span>`).join('');
+
+  // ---- Services offered + catalogue ----
+  function renderServices(printer){
+    const s = printer.services || { catalogue:[], submissions:false, customDesign:false };
+    const catalogueActive = Array.isArray(s.catalogue) && s.catalogue.length > 0;
+
+    const serviceDefs = [
+      { active:catalogueActive, name:"Print from catalogue", desc:"Choose from designs they already have ready to print" },
+      { active:!!s.submissions, name:"Submit your own design", desc:"Send your own STL or 3MF file and they'll print it" },
+      { active:!!s.customDesign, name:"Custom design", desc:"Describe what you need — they'll design it for you" },
+    ];
+
+    document.getElementById('services').innerHTML = serviceDefs.map(sv => `
+      <div class="service" data-active="${sv.active}">
+        <div class="service-status"><span class="dot"></span>${sv.active ? 'Offered' : 'Not offered'}</div>
+        <h3>${sv.name}</h3>
+        <p>${sv.desc}</p>
+      </div>
+    `).join('');
+
+    const catalogueSection = document.getElementById('catalogueSection');
+    const catalogueEl = document.getElementById('catalogue');
+    if(catalogueActive){
+      catalogueSection.style.display = '';
+      catalogueEl.innerHTML = s.catalogue.map(item => `
+        <a class="catalogue-item" href="${item.url}" target="_blank" rel="noopener">
+          <span>${item.name}</span><span class="arrow">↗</span>
+        </a>
+      `).join('');
+    } else {
+      catalogueSection.style.display = 'none';
+    }
+  }
+  renderServices(p);
+
+  // ---- Mini map with a fuzzed radius instead of an exact pin (privacy) ----
+  const map = L.map('miniMap', { zoomControl:false, scrollWheelZoom:false, dragging:false }).setView([p.lat, p.lng], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19
+  }).addTo(map);
+  L.circle([p.lat, p.lng], {
+    radius: 600,
+    color:'#600D07', fillColor:'#B8230D', fillOpacity:0.18, weight:1.5
+  }).addTo(map);
+</script>
+
+</body>
+</html>
