@@ -173,7 +173,7 @@
 
     let data;
     try {
-      const res = await fetch(`/api/search?suburb=${encodeURIComponent(suburbQuery)}`);
+      const res = await fetch(`functions/api/search?suburb=${encodeURIComponent(suburbQuery)}`);
       data = await res.json();
       if (!res.ok) {
         metaEl.textContent = data.error || 'Something went wrong.';
