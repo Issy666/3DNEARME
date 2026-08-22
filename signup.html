@@ -344,7 +344,7 @@
     submitHint.textContent = 'Creating your listing…';
 
     try {
-      const res = await fetch('functions/api/signup', {
+      const res = await fetch('/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
