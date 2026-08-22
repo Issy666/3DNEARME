@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LocalPrint — List your printer</title>
+<link rel="stylesheet" href="theme.css">
+<style>
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:var(--font-body); line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+
+  header{
+    position:sticky; top:0; z-index:20;
+    background:rgba(241,243,239,0.95);
+    border-bottom:1px solid var(--line);
+  }
+  .nav{
+    max-width:720px; margin:0 auto; padding:0 24px;
+    display:flex; align-items:center; justify-content:space-between; height:64px;
+  }
+  .wordmark{
+    font-family:var(--font-mono); font-weight:600;
+    font-size:15px; letter-spacing:0.12em; text-decoration:none;
+  }
+  .wordmark span{color:var(--teal);}
+  .back{font-size:13.5px; color:var(--muted); text-decoration:none;}
+  .back:hover{color:var(--ink);}
+
+  .wrap{max-width:720px; margin:0 auto; padding:40px 24px 80px;}
+
+  .page-head{margin-bottom:32px;}
+  .page-head h1{font-size:26px; font-weight:700; letter-spacing:-0.01em; margin-bottom:8px;}
+  .page-head p{color:var(--muted); font-size:14.5px; max-width:480px;}
+
+  /* Message banner (errors / status) */
+  .banner{
+    display:none;
+    border-radius:var(--radius); padding:14px 16px; margin-bottom:24px;
+    font-size:13.5px;
+  }
+  .banner.show{display:block;}
+  .banner.error{background:#FDECEA; border:1px solid #F3C4BE; color:#8A2A1D;}
+  .banner.error ul{margin:6px 0 0 18px;}
+  .banner.info{background:#E9F3F1; border:1px solid #BFE0D9; color:#1E5C4F;}
+
+  form{display:flex; flex-direction:column; gap:28px;}
+
+  fieldset{border:none; padding:0;}
+  legend{
+    font-family:var(--font-mono); font-size:12px; text-transform:uppercase;
+    letter-spacing:0.08em; color:var(--muted);
+    padding-bottom:8px; margin-bottom:16px; border-bottom:1px solid var(--line);
+    width:100%; display:block;
+  }
+
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{
+    display:block; font-size:13px; font-weight:600; margin-bottom:6px;
+  }
+  .field .hint{font-size:12px; color:var(--muted); margin-top:5px;}
+  .field input[type="text"],
+  .field input[type="email"],
+  .field input[type="password"],
+  .field input[type="number"],
+  .field input[type="tel"],
+  .field textarea{
+    width:100%;
+    border:1px solid var(--line); border-radius:var(--radius);
+    background:var(--paper-raised);
+    font-family:var(--font-body); font-size:14.5px; color:var(--ink);
+    padding:11px 12px;
+    outline:none;
+    transition:border-color .15s ease;
+  }
+  .field input:focus, .field textarea:focus{border-color:var(--teal);}
+  .field textarea{resize:vertical; min-height:88px;}
+
+  .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .row3 .field, .row2 .field{margin-bottom:0;}
+  .unit-label{font-size:11px; color:var(--muted); margin-top:4px;}
+
+  /* Material chips */
+  .chip-group{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip-toggle{
+    font-family:var(--font-mono); font-size:12.5px;
+    border:1px solid var(--line); background:var(--paper-raised); color:var(--muted);
+    border-radius:var(--radius); padding:8px 14px; cursor:pointer;
+    transition:all .12s ease;
+  }
+  .chip-toggle:hover{border-color:var(--teal);}
+  .chip-toggle.active{
+    background:var(--ink); border-color:var(--ink); color:var(--paper);
+  }
+
+  /* Toggle switches for services */
+  .toggle-row{
+    display:flex; align-items:flex-start; justify-content:space-between; gap:16px;
+    padding:14px 0; border-bottom:1px solid var(--line);
+  }
+  .toggle-row:last-child{border-bottom:none; padding-bottom:0;}
+  .toggle-row:first-child{padding-top:0;}
+  .toggle-text h4{font-size:14px; font-weight:600; margin-bottom:3px;}
+  .toggle-text p{font-size:12.5px; color:var(--muted); max-width:400px;}
+  .switch{
+    position:relative; width:42px; height:24px; flex:none; margin-top:2px;
+  }
+  .switch input{position:absolute; opacity:0; width:100%; height:100%; margin:0; cursor:pointer;}
+  .switch .track{
+    position:absolute; inset:0; background:var(--line); border-radius:999px;
+    transition:background .15s ease;
+  }
+  .switch .knob{
+    position:absolute; top:3px; left:3px; width:18px; height:18px;
+    background:#fff; border-radius:50%; transition:transform .15s ease;
+    box-shadow:0 1px 2px rgba(0,0,0,0.2);
+  }
+  .switch input:checked + .track{background:var(--teal);}
+  .switch input:checked + .track .knob{transform:translateX(18px);}
+  .switch input:checked ~ .knob{transform:translateX(18px);}
+
+  .catalogue-note{
+    font-size:12.5px; color:var(--muted); background:var(--paper-raised);
+    border:1px solid var(--line); border-radius:var(--radius);
+    padding:12px 14px; margin-top:14px;
+  }
+
+  .submit-row{display:flex; align-items:center; gap:16px;}
+  button[type="submit"]{
+    font-family:var(--font-mono); font-weight:600; font-size:14px;
+    background:var(--teal); color:#fff; border:none; border-radius:var(--radius);
+    padding:14px 28px; cursor:pointer;
+    transition:background .15s ease;
+  }
+  button[type="submit"]:hover:not(:disabled){background:var(--teal-deep);}
+  button[type="submit"]:disabled{opacity:0.6; cursor:not-allowed;}
+  .submit-hint{font-size:12.5px; color:var(--muted);}
+
+  @media (max-width:560px){
+    .row3{grid-template-columns:1fr;}
+    .row2{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <img href="index.html" width=100 height=100 src="logo.svg" > </svg> </a>
+    <a href="index.html" class="btn-list">Home</a>
+  </div>
+</header>
+
+
+<div class="wrap">
+
+  <div class="page-head">
+    <h1>List your printer</h1>
+    <p>Takes about three minutes. You'll be live in the directory as soon as you submit — you can edit or hide your listing any time.</p>
+  </div>
+
+  <div class="banner" id="banner"></div>
+
+  <form id="signupForm" novalidate>
+
+    <fieldset>
+      <legend>Account</legend>
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password">
+        <p class="hint">At least 8 characters.</p>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Your listing</legend>
+      <div class="field">
+        <label for="alias">Display name</label>
+        <input type="text" id="alias" name="alias" placeholder="e.g. Owen's Garage Print Co." required>
+        <p class="hint">Shown publicly — use a nickname or workshop name, not necessarily your full name.</p>
+      </div>
+      <div class="field">
+        <label for="suburb">Suburb</label>
+        <input type="text" id="suburb" name="suburb" placeholder="e.g. West End" required>
+        <p class="hint">We only store your suburb, not your exact address. It's geocoded once when you submit this form.</p>
+      </div>
+      <div class="field">
+        <label for="printer_model">Printer model</label>
+        <input type="text" id="printer_model" name="printer_model" placeholder="e.g. Bambu Lab P1S" required>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Build specs</legend>
+      <div class="field">
+        <label>Build plate size (mm)</label>
+        <div class="row3">
+          <div>
+            <input type="number" id="build_x_mm" name="build_x_mm" placeholder="X" min="1" required>
+            <p class="unit-label">Width (X)</p>
+          </div>
+          <div>
+            <input type="number" id="build_y_mm" name="build_y_mm" placeholder="Y" min="1" required>
+            <p class="unit-label">Depth (Y)</p>
+          </div>
+          <div>
+            <input type="number" id="build_z_mm" name="build_z_mm" placeholder="Z" min="1" required>
+            <p class="unit-label">Height (Z)</p>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Materials on hand</legend>
+      <div class="chip-group" id="materialChips">
+        <button type="button" class="chip-toggle" data-material="PLA">PLA</button>
+        <button type="button" class="chip-toggle" data-material="PETG">PETG</button>
+        <button type="button" class="chip-toggle" data-material="ABS">ABS</button>
+        <button type="button" class="chip-toggle" data-material="TPU">TPU</button>
+        <button type="button" class="chip-toggle" data-material="Resin">Resin</button>
+        <button type="button" class="chip-toggle" data-material="Nylon">Nylon</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Services offered</legend>
+      <div class="toggle-row">
+        <div class="toggle-text">
+          <h4>Submit your own design</h4>
+          <p>Customers can send their own STL/3MF file for you to print.</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="accepts_submissions" name="accepts_submissions">
+          <span class="track"><span class="knob"></span></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-text">
+          <h4>Custom design</h4>
+          <p>You'll design something from scratch based on a customer's brief.</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="offers_custom_design" name="offers_custom_design">
+          <span class="track"><span class="knob"></span></span>
+        </label>
+      </div>
+      <p class="catalogue-note">Want to offer a catalogue of ready-made designs too? You can add catalogue items from your profile once your account is created.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Contact &amp; about</legend>
+      <div class="field">
+        <label for="contact_email">Contact email</label>
+        <input type="email" id="contact_email" name="contact_email" placeholder="Where enquiries land" required>
+        <p class="hint">Can be the same as your account email, or a different one you check more often.</p>
+      </div>
+      <div class="field">
+        <label for="contact_phone">Contact phone <span style="color:var(--muted); font-weight:400;">(optional)</span></label>
+        <input type="tel" id="contact_phone" name="contact_phone" placeholder="Optional">
+      </div>
+      <div class="field">
+        <label for="about">About <span style="color:var(--muted); font-weight:400;">(optional)</span></label>
+        <textarea id="about" name="about" placeholder="A couple of sentences about what you print and how long you've been at it."></textarea>
+      </div>
+    </fieldset>
+
+    <div class="submit-row">
+      <button type="submit" id="submitBtn">Create my listing</button>
+      <span class="submit-hint" id="submitHint"></span>
+    </div>
+
+  </form>
+
+</div>
+
+<script>
+  const selectedMaterials = new Set();
+  document.querySelectorAll('.chip-toggle').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const material = chip.dataset.material;
+      if (selectedMaterials.has(material)) {
+        selectedMaterials.delete(material);
+        chip.classList.remove('active');
+      } else {
+        selectedMaterials.add(material);
+        chip.classList.add('active');
+      }
+    });
+  });
+
+  const form = document.getElementById('signupForm');
+  const banner = document.getElementById('banner');
+  const submitBtn = document.getElementById('submitBtn');
+  const submitHint = document.getElementById('submitHint');
+
+  function showBanner(kind, message, details) {
+    banner.className = `banner show ${kind}`;
+    let html = `<div>${message}</div>`;
+    if (Array.isArray(details) && details.length) {
+      html += `<ul>${details.map(d => `<li>${d}</li>`).join('')}</ul>`;
+    }
+    banner.innerHTML = html;
+    banner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    banner.className = 'banner';
+
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
+    const payload = {
+      email: document.getElementById('email').value.trim(),
+      password: document.getElementById('password').value,
+      alias: document.getElementById('alias').value.trim(),
+      suburb: document.getElementById('suburb').value.trim(),
+      printer_model: document.getElementById('printer_model').value.trim(),
+      build_x_mm: Number(document.getElementById('build_x_mm').value),
+      build_y_mm: Number(document.getElementById('build_y_mm').value),
+      build_z_mm: Number(document.getElementById('build_z_mm').value),
+      about: document.getElementById('about').value.trim() || null,
+      contact_email: document.getElementById('contact_email').value.trim(),
+      contact_phone: document.getElementById('contact_phone').value.trim() || null,
+      accepts_submissions: document.getElementById('accepts_submissions').checked,
+      offers_custom_design: document.getElementById('offers_custom_design').checked,
+      materials: Array.from(selectedMaterials),
+    };
+
+    submitBtn.disabled = true;
+    submitHint.textContent = 'Creating your listing…';
+
+    try {
+      const res = await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showBanner('error', data.error || 'Something went wrong.', data.details);
+        submitBtn.disabled = false;
+        submitHint.textContent = '';
+        return;
+      }
+
+      submitHint.textContent = 'Done — redirecting…';
+      window.location.href = `profile.html?id=${data.id}`;
+    } catch (err) {
+      showBanner('error', 'Could not reach the server. Check your connection and try again.');
+      submitBtn.disabled = false;
+      submitHint.textContent = '';
+    }
+  });
+</script>
+
+</body>
+</html>

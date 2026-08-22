@@ -159,7 +159,7 @@
 
 <header>
   <div class="nav">
-    <a href="index.html" class="wordmark">LOCAL<span>PRINT</span></a>
+    <img href="index.html" width=100 height=100 src="logo.svg" > </svg> </a>
     <a href="search.html" class="back">← Back to results</a>
   </div>
 </header>
@@ -220,90 +220,79 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-  // ---- Mock data (replace with a fetch() to your /api/printers/:id endpoint) ----
-  // services.catalogue: array of {name, url} pre-made designs ready to print
-  // services.submissions: true/false — will print a customer's own file
-  // services.customDesign: true/false — will design something from a brief
-  const PRINTERS = {
-    1: { alias:"Owen's Garage Print Co.", suburb:"West End", distanceKm:1.2, model:"Bambu Lab P1S", volume:"256×256×256mm", layer:"0.08mm", turnaround:"1–2 days", materials:["PLA","PETG","TPU"], online:true,
-         services:{
-           catalogue:[
-             { name:"Phone stand (adjustable)", url:"#" },
-             { name:"Cable clip 6-pack", url:"#" },
-             { name:"Desk cord organiser", url:"#" },
-             { name:"Articulated fidget dragon", url:"#" }
-           ],
-           submissions:true,
-           customDesign:true
-         },
-         about:"Been printing for about four years, started with props and now do a mix of functional parts, prototypes and small batch runs. Happy to look at STL files and quote before you commit.",
-         lat:-27.4820, lng:153.0100, contact:"mailto:owen@example.com?subject=LocalPrint%20enquiry" },
-    2: { alias:"M. Chen — Prototyping", suburb:"South Brisbane", distanceKm:2.4, model:"Prusa MK4", volume:"250×210×220mm", layer:"0.05mm", turnaround:"2–3 days", materials:["PLA","ABS"], online:true,
-         services:{
-           catalogue:[],
-           submissions:true,
-           customDesign:true
-         },
-         about:"Mechanical engineer, mostly print jigs, brackets and prototypes for other makers and small businesses. Good tolerances, will flag anything that looks like it won't print well.",
-         lat:-27.4770, lng:153.0190, contact:"mailto:chen@example.com?subject=LocalPrint%20enquiry" },
-    3: { alias:"The Spool Shed", suburb:"Highgate Hill", distanceKm:3.1, model:"Creality K1 Max", volume:"300×300×300mm", layer:"0.1mm", turnaround:"3–5 days", materials:["PLA","PETG"], online:false,
-         services:{
-           catalogue:[
-             { name:"Large planter (200mm)", url:"#" },
-             { name:"Storage bin set", url:"#" }
-           ],
-           submissions:true,
-           customDesign:false
-         },
-         about:"Large-format printer, good for bigger single pieces or batches of smaller ones. Currently a bit backed up so turnaround runs longer than usual.",
-         lat:-27.4880, lng:153.0140, contact:"mailto:spoolshed@example.com?subject=LocalPrint%20enquiry" },
-    4: { alias:"Resin & Rust", suburb:"Woolloongabba", distanceKm:4.6, model:"Elegoo Saturn (Resin)", volume:"192×120×200mm", layer:"0.025mm", turnaround:"2–4 days", materials:["Resin"], online:true,
-         services:{
-           catalogue:[
-             { name:"D&D miniature — 32mm scale", url:"#" }
-           ],
-           submissions:true,
-           customDesign:true
-         },
-         about:"Specialise in high-detail resin prints — miniatures, jewellery casting masters, figurines. Not set up for large or structural parts.",
-         lat:-27.4890, lng:153.0360, contact:"mailto:resinrust@example.com?subject=LocalPrint%20enquiry" },
-    5: { alias:"Milton Makerspace", suburb:"Milton", distanceKm:5.8, model:"Bambu Lab X1C", volume:"256×256×256mm", layer:"0.08mm", turnaround:"3–4 days", materials:["PLA","PETG","Nylon"], online:true,
-         services:{
-           catalogue:[],
-           submissions:true,
-           customDesign:false
-         },
-         about:"Community makerspace machine — a small material fee applies and jobs queue behind member projects, but it's a reliable option if you're not in a rush.",
-         lat:-27.4680, lng:152.9990, contact:"mailto:milton.makers@example.com?subject=LocalPrint%20enquiry" },
-  };
-
   const params = new URLSearchParams(window.location.search);
-  const id = Number(params.get('id')) || 1;
-  const p = PRINTERS[id] || PRINTERS[1];
+  const id = Number(params.get('id'));
+  const fromLat = params.get('lat');
+  const fromLng = params.get('lng');
 
-  document.title = `${p.alias} — LocalPrint`;
-  document.getElementById('alias').textContent = p.alias;
-  document.getElementById('suburb').textContent = p.suburb;
-  document.getElementById('distanceVal').innerHTML = `&Delta; ${p.distanceKm.toFixed(1)} <span style="font-size:15px;">KM</span>`;
-  document.getElementById('statusText').textContent = p.online ? 'Active this week' : 'Inactive recently';
-  document.getElementById('statModel').textContent = p.model;
-  document.getElementById('statVolume').textContent = p.volume;
-  document.getElementById('statLayer').textContent = p.layer;
-  document.getElementById('statTurnaround').textContent = p.turnaround;
-  document.getElementById('about').textContent = p.about;
-  document.getElementById('contactBtn').href = p.contact;
-  document.getElementById('materials').innerHTML =
-    p.materials.map(m => `<span class="chip">${m}</span>`).join('');
+  if (!Number.isInteger(id) || id <= 0) {
+    showNotFound('No printer id was given.');
+  } else {
+    loadPrinter(id, fromLat, fromLng);
+  }
+
+  async function loadPrinter(printerId, lat, lng) {
+    let url = `/api/printers/${printerId}`;
+    if (lat && lng) url += `?lat=${lat}&lng=${lng}`;
+
+    let p;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        showNotFound(data.error || 'This printer could not be found.');
+        return;
+      }
+      p = await res.json();
+    } catch (err) {
+      showNotFound('Could not reach the server. Check your connection and try again.');
+      return;
+    }
+
+    render(p);
+  }
+
+  function showNotFound(message) {
+    document.getElementById('alias').textContent = 'Not found';
+    document.getElementById('suburb').textContent = message;
+    document.getElementById('statusText').textContent = '—';
+    document.querySelector('.stats').style.display = 'none';
+    document.querySelector('.contact-bar').style.display = 'none';
+  }
+
+  function render(p) {
+    document.title = `${p.alias} — LocalPrint`;
+    document.getElementById('alias').textContent = p.alias;
+    document.getElementById('suburb').textContent = p.suburb;
+    document.getElementById('distanceVal').innerHTML = p.distanceKm != null
+      ? `&Delta; ${p.distanceKm.toFixed(1)} <span style="font-size:15px;">KM</span>`
+      : '—';
+    document.getElementById('statusText').textContent = p.online ? 'Active this week' : 'Inactive recently';
+    document.getElementById('statModel').textContent = p.printerModel;
+    document.getElementById('statVolume').textContent = p.buildVolume;
+    document.getElementById('statLayer').textContent = p.minLayerHeightMm != null ? `${p.minLayerHeightMm}mm` : '—';
+    document.getElementById('statTurnaround').textContent =
+      (p.turnaroundDaysMin != null && p.turnaroundDaysMax != null)
+        ? `${p.turnaroundDaysMin}–${p.turnaroundDaysMax} days`
+        : '—';
+    document.getElementById('about').textContent = p.about || 'No description provided yet.';
+    document.getElementById('contactBtn').href =
+      `mailto:${p.contactEmail}?subject=${encodeURIComponent('LocalPrint enquiry')}`;
+    document.getElementById('materials').innerHTML =
+      p.materials.map(m => `<span class="chip">${m}</span>`).join('') || '<span class="catalogue-empty">No materials listed.</span>';
+
+    renderServices(p);
+    renderMap(p);
+  }
 
   // ---- Services offered + catalogue ----
-  function renderServices(printer){
-    const s = printer.services || { catalogue:[], submissions:false, customDesign:false };
-    const catalogueActive = Array.isArray(s.catalogue) && s.catalogue.length > 0;
+  function renderServices(p) {
+    const catalogueActive = Array.isArray(p.catalogue) && p.catalogue.length > 0;
 
     const serviceDefs = [
-      { active:catalogueActive, name:"Print from catalogue", desc:"Choose from designs they already have ready to print" },
-      { active:!!s.submissions, name:"Submit your own design", desc:"Send your own STL or 3MF file and they'll print it" },
-      { active:!!s.customDesign, name:"Custom design", desc:"Describe what you need — they'll design it for you" },
+      { active: catalogueActive, name: "Print from catalogue", desc: "Choose from designs they already have ready to print" },
+      { active: !!p.acceptsSubmissions, name: "Submit your own design", desc: "Send your own STL or 3MF file and they'll print it" },
+      { active: !!p.offersCustomDesign, name: "Custom design", desc: "Describe what you need — they'll design it for you" },
     ];
 
     document.getElementById('services').innerHTML = serviceDefs.map(sv => `
@@ -316,9 +305,9 @@
 
     const catalogueSection = document.getElementById('catalogueSection');
     const catalogueEl = document.getElementById('catalogue');
-    if(catalogueActive){
+    if (catalogueActive) {
       catalogueSection.style.display = '';
-      catalogueEl.innerHTML = s.catalogue.map(item => `
+      catalogueEl.innerHTML = p.catalogue.map(item => `
         <a class="catalogue-item" href="${item.url}" target="_blank" rel="noopener">
           <span>${item.name}</span><span class="arrow">↗</span>
         </a>
@@ -327,18 +316,20 @@
       catalogueSection.style.display = 'none';
     }
   }
-  renderServices(p);
 
   // ---- Mini map with a fuzzed radius instead of an exact pin (privacy) ----
-  const map = L.map('miniMap', { zoomControl:false, scrollWheelZoom:false, dragging:false }).setView([p.lat, p.lng], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors',
-    maxZoom: 19
-  }).addTo(map);
-  L.circle([p.lat, p.lng], {
-    radius: 600,
-    color:'#600D07', fillColor:'#B8230D', fillOpacity:0.18, weight:1.5
-  }).addTo(map);
+  function renderMap(p) {
+    const map = L.map('miniMap', { zoomControl: false, scrollWheelZoom: false, dragging: false })
+      .setView([p.lat, p.lng], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(map);
+    L.circle([p.lat, p.lng], {
+      radius: 600,
+      color: '#600D07', fillColor: '#B8230D', fillOpacity: 0.18, weight: 1.5
+    }).addTo(map);
+  }
 </script>
 
 </body>

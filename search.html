@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LocalPrint — Printers near you</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-     crossorigin=""/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="theme.css">
 <style>
   *{box-sizing:border-box; margin:0; padding:0;}
@@ -32,7 +33,7 @@
     font-family:var(--font-mono); font-weight:600;
     font-size:15px; letter-spacing:0.12em; text-decoration:none; white-space:nowrap;
   }
-  .wordmark span{color:var(--light-red);}
+  .wordmark span{color:var(--teal);}
   .searchbar{
     flex:1; max-width:420px;
     display:flex; border:1px solid var(--line); background:var(--paper-raised);
@@ -49,7 +50,7 @@
   }
   .btn-list{
     font-family:var(--font-mono); font-size:13px; font-weight:500;
-    background:var(--light-red); color:#fff; padding:9px 16px; border-radius:var(--radius);
+    background:var(--teal); color:#fff; padding:9px 16px; border-radius:var(--radius);
     text-decoration:none; white-space:nowrap;
   }
 
@@ -58,7 +59,7 @@
   }
   .results-head h1{font-size:20px; font-weight:600;}
   .results-head .meta{color:var(--muted); font-size:13.5px; margin-top:4px;}
-  .results-head .meta .mono{color:var(--red);}
+  .results-head .meta .mono{color:var(--teal-deep);}
 
   .layout{
     max-width:1280px; margin:0 auto; padding:16px 24px 60px;
@@ -72,7 +73,7 @@
     background:var(--paper-raised); border:1px solid var(--line); border-radius:var(--radius);
     padding:18px; cursor:pointer; transition:border-color .15s ease, transform .1s ease;
   }
-  .card:hover, .card.active{border-color:var(--light-red);}
+  .card:hover, .card.active{border-color:var(--teal);}
   .card-top{
     display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:8px;
   }
@@ -80,7 +81,7 @@
   .card .suburb{color:var(--muted); font-size:13px; margin-top:2px;}
   .distance{
     font-family:var(--font-mono); font-size:12.5px; font-weight:600;
-    color:var(--red); background:#E3F2F0; padding:4px 8px; border-radius:var(--radius);
+    color:var(--teal-deep); background:#E3F2F0; padding:4px 8px; border-radius:var(--radius);
     white-space:nowrap;
   }
   .chips{display:flex; flex-wrap:wrap; gap:6px; margin:10px 0;}
@@ -96,7 +97,7 @@
   }
   .status .dot{width:6px; height:6px; border-radius:50%; background:var(--status-online);}
   .card-foot a{
-    font-size:13px; font-weight:600; color:var(--red); text-decoration:none;
+    font-size:13px; font-weight:600; color:var(--teal-deep); text-decoration:none;
   }
 
   #map{
@@ -120,7 +121,7 @@
 
 <header>
   <div class="nav">
-    <a href="index.html" class="wordmark">LOCAL<span>PRINT</span></a>
+    <img href="index.html" width=100 height=100 src="logo.svg" > </svg> </a>
     <form class="searchbar" onsubmit="handleSearch(event)">
       <input type="text" id="suburbInput" placeholder="Search a suburb or postcode" autocomplete="off">
       <button type="submit">Search</button>
@@ -141,73 +142,108 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-  // ---- Mock data (replace with a fetch() to your /api/search endpoint) ----
-  const PRINTERS = [
-    { id:1, alias:"Owen's Garage Print Co.", suburb:"West End", distanceKm:1.2, model:"Bambu Lab P1S", materials:["PLA","PETG","TPU"], blurb:"Fast turnaround, mostly do functional parts and cosplay props.", online:true, lat:-27.4820, lng:153.0100 },
-    { id:2, alias:"M. Chen — Prototyping", suburb:"South Brisbane", distanceKm:2.4, model:"Prusa MK4", materials:["PLA","ABS"], blurb:"Engineer by trade, good for precision prototypes and jigs.", online:true, lat:-27.4770, lng:153.0190 },
-    { id:3, alias:"The Spool Shed", suburb:"Highgate Hill", distanceKm:3.1, model:"Creality K1 Max", materials:["PLA","PETG"], blurb:"Large build volume, happy to batch print multiples.", online:false, lat:-27.4880, lng:153.0140 },
-    { id:4, alias:"Resin & Rust", suburb:"Woolloongabba", distanceKm:4.6, model:"Elegoo Saturn (Resin)", materials:["Resin"], blurb:"High-detail resin work — miniatures, jewellery masters.", online:true, lat:-27.4890, lng:153.0360 },
-    { id:5, alias:"Milton Makerspace", suburb:"Milton", distanceKm:5.8, model:"Bambu Lab X1C", materials:["PLA","PETG","Nylon"], blurb:"Community makerspace printer, small fee covers material.", online:true, lat:-27.4680, lng:152.9990 },
-  ];
-
   const params = new URLSearchParams(window.location.search);
   const suburb = params.get('suburb') || '';
   document.getElementById('suburbInput').value = suburb;
-  document.getElementById('resultsTitle').textContent = suburb ? `Printers near “${suburb}”` : 'Printers near you';
 
-  // Simple filter placeholder — in production this is a real geocode + distance query
-  const results = [...PRINTERS].sort((a,b) => a.distanceKm - b.distanceKm);
-  document.getElementById('resultsMeta').innerHTML =
-    `Showing <span class="mono">${results.length}</span> results, closest first`;
-
-  // ---- Render list ----
-  const listEl = document.getElementById('list');
-  results.forEach(p => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.dataset.id = p.id;
-    card.innerHTML = `
-      <div class="card-top">
-        <div>
-          <h3>${p.alias}</h3>
-          <div class="suburb">${p.suburb}</div>
-        </div>
-        <span class="distance mono">&Delta; ${p.distanceKm.toFixed(1)} KM</span>
-      </div>
-      <div class="chips">
-        <span class="chip">${p.model}</span>
-        ${p.materials.map(m => `<span class="chip">${m}</span>`).join('')}
-      </div>
-      <p class="blurb">${p.blurb}</p>
-      <div class="card-foot">
-        <span class="status"><span class="dot" style="background:${p.online ? 'var(--status-online)' : 'var(--status-offline)'}"></span>${p.online ? 'Active this week' : 'Inactive'}</span>
-        <a href="profile.html?id=${p.id}">View profile →</a>
-      </div>
-    `;
-    card.addEventListener('click', () => focusMarker(p.id));
-    listEl.appendChild(card);
-  });
-
-  // ---- Map ----
-  const map = L.map('map', { scrollWheelZoom: false }).setView([-27.4820, 153.0170], 13);
+  // ---- Map (created empty, populated once real results arrive) ----
+  const DEFAULT_CENTER = [-27.4698, 153.0251]; // Brisbane CBD fallback
+  const map = L.map('map', { scrollWheelZoom: false }).setView(DEFAULT_CENTER, 12);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19
   }).addTo(map);
-
   const markers = {};
-  results.forEach(p => {
-    const marker = L.circleMarker([p.lat, p.lng], {
-      radius: 9,
-      color: '#600D07',
-      fillColor: '#B8230D',
-      fillOpacity: 0.9,
-      weight: 2
-    }).addTo(map);
-    marker.bindPopup(`<div class="popup-name">${p.alias}</div><div class="popup-dist">Δ ${p.distanceKm.toFixed(1)} km · ${p.suburb}</div>`);
-    marker.on('click', () => focusCard(p.id));
-    markers[p.id] = marker;
-  });
+
+  const listEl = document.getElementById('list');
+  const titleEl = document.getElementById('resultsTitle');
+  const metaEl = document.getElementById('resultsMeta');
+
+  if (!suburb) {
+    titleEl.textContent = 'Search for a suburb to get started';
+    metaEl.textContent = 'Try the search box above.';
+  } else {
+    runSearch(suburb);
+  }
+
+  async function runSearch(suburbQuery) {
+    titleEl.textContent = `Printers near “${suburbQuery}”`;
+    metaEl.textContent = 'Searching…';
+    listEl.innerHTML = '';
+
+    let data;
+    try {
+      const res = await fetch(`/api/search?suburb=${encodeURIComponent(suburbQuery)}`);
+      data = await res.json();
+      if (!res.ok) {
+        metaEl.textContent = data.error || 'Something went wrong.';
+        return;
+      }
+    } catch (err) {
+      metaEl.textContent = 'Could not reach the server. Check your connection and try again.';
+      return;
+    }
+
+    const results = data.results || [];
+    metaEl.innerHTML = `Showing <span class="mono">${results.length}</span> results, closest first`;
+
+    if (data.center) {
+      map.setView([data.center.lat, data.center.lng], 13);
+    }
+
+    if (results.length === 0) {
+      listEl.innerHTML = `<p style="color:var(--muted); font-size:14px;">No printers found within ${data.radiusKm || 25}km of “${suburbQuery}” yet.</p>`;
+      return;
+    }
+
+    renderList(results, data.center);
+    renderMarkers(results);
+  }
+
+  function renderList(results, center) {
+    results.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.id = p.id;
+      const profileUrl = center
+        ? `profile.html?id=${p.id}&lat=${center.lat}&lng=${center.lng}`
+        : `profile.html?id=${p.id}`;
+      card.innerHTML = `
+        <div class="card-top">
+          <div>
+            <h3>${p.alias}</h3>
+            <div class="suburb">${p.suburb}</div>
+          </div>
+          <span class="distance mono">&Delta; ${p.distanceKm.toFixed(1)} KM</span>
+        </div>
+        <div class="chips">
+          <span class="chip">${p.printerModel}</span>
+          ${p.materials.map(m => `<span class="chip">${m}</span>`).join('')}
+        </div>
+        <div class="card-foot">
+          <span class="status"><span class="dot" style="background:${p.online ? 'var(--status-online)' : 'var(--status-offline)'}"></span>${p.online ? 'Active this week' : 'Inactive'}</span>
+          <a href="${profileUrl}">View profile →</a>
+        </div>
+      `;
+      card.addEventListener('click', () => focusMarker(p.id));
+      listEl.appendChild(card);
+    });
+  }
+
+  function renderMarkers(results) {
+    results.forEach(p => {
+      const marker = L.circleMarker([p.lat, p.lng], {
+        radius: 8,
+        color: '#137168',
+        fillColor: '#1C9C93',
+        fillOpacity: 0.9,
+        weight: 2
+      }).addTo(map);
+      marker.bindPopup(`<div class="popup-name">${p.alias}</div><div class="popup-dist">Δ ${p.distanceKm.toFixed(1)} km · ${p.suburb}</div>`);
+      marker.on('click', () => focusCard(p.id));
+      markers[p.id] = marker;
+    });
+  }
 
   function focusMarker(id){
     const m = markers[id];

@@ -19,10 +19,10 @@
               this one around, it loses meaning if everything is orange */
   --light-red:       #D0716D;
   --red:  #600D07;  /* hover/active state for teal elements */
-  --signal:     #FF6A2B;
+  --signal:     #F4942F;
 
   /* ---- Status colours (used on availability dots) ---------------------- */
-  --status-online:  #3FA66B;
+  --status-online:  #B8230D;
   --status-offline: #B7BDB2;
 
   /* ---- Shape ------------------------------------------------------------ */
