@@ -1,5 +1,4 @@
 .vscode/
-.wrangler/
 database/.wrangler/
 node_modules/
 package-lock.json
